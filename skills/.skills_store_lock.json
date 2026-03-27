@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "baidu-search": {
+      "name": "baidu web search",
+      "zip_url": "https://lightmake.site/api/v1/download?slug=baidu-search",
+      "source": "skillhub",
+      "version": "1.1.0"
+    },
+    "git-essentials": {
+      "name": "Git Essentials",
+      "zip_url": "https://lightmake.site/api/v1/download?slug=git-essentials",
+      "source": "skillhub",
+      "version": "1.0.0"
+    },
+    "web-scraper": {
+      "name": "Web Scraper",
+      "zip_url": "https://lightmake.site/api/v1/download?slug=web-scraper",
+      "source": "skillhub",
+      "version": "0.1.1"
+    }
+  }
+}
