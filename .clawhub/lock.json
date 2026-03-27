@@ -4,6 +4,14 @@
     "ai-coding-assistant": {
       "version": "1.0.0",
       "installedAt": 1774609870074
+    },
+    "automation-workflows": {
+      "version": "0.1.0",
+      "installedAt": 1774619068519
+    },
+    "chinese-ai-agent-guide": {
+      "version": "1.0.0",
+      "installedAt": 1774619068568
     }
   }
 }
