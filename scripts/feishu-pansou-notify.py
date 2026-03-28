@@ -17,7 +17,7 @@ APP_ID = "cli_a932af59f179dbdf"
 APP_SECRET = "BGJK2ie8wkYuLXxDCKgykg2ZGMfCSRsr"
 USER_ID = "ou_7cbc96c1a403d773f7a009557e5eb583"
 TOKEN_URL = "https://open.feishu.cn/open-apis/auth/v3/app_access_token/internal"
-MESSAGE_URL = "https://open.feishu.cn/open-apis/im/v1/messages"
+MESSAGE_URL = "https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=user_id"
 
 try:
     print("[1/3] 获取 Feishu Token...")
@@ -34,8 +34,12 @@ try:
     print("[2/3] 搜索 Pansou 资源...")
     # 使用 docker exec 调用 Pansou API
     encoded_keyword = quote(keyword)
-    docker_cmd = f'docker exec pansou wget -q -O - "http://localhost:8888/api/search?keyword={encoded_keyword}&limit={limit}"'
-    result = subprocess.run(docker_cmd, shell=True, capture_output=True, text=True)
+    # 使用列表形式避免 shell=True 的安全风险和性能开销
+    docker_cmd = [
+        "docker", "exec", "pansou", "wget", "-q", "-O", "-",
+        f"http://localhost:8888/api/search?keyword={encoded_keyword}&limit={limit}"
+    ]
+    result = subprocess.run(docker_cmd, capture_output=True, text=True)
     
     if not result.stdout:
         print("❌ Pansou API 返回空结果")
@@ -43,9 +47,32 @@ try:
     
     search_result = json.loads(result.stdout)
     total_count = search_result.get("data", {}).get("total", 0)
+    results_data = search_result.get("data", {}).get("results", [])
     
     print("[3/3] 发送 Feishu 消息...")
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    
+    # 动态构建网盘统计表格
+    pan_stats = {}
+    for item in results_data[:limit]:
+        pan_type = item.get("pan_type", "未知")
+        pan_stats[pan_type] = pan_stats.get(pan_type, 0) + 1
+    
+    table_rows = []
+    pan_icons = {
+        "magnet": "🧲 磁力链接",
+        "tianyi": "🕊️ 天翼云盘",
+        "xunlei": "⚡ 迅雷网盘",
+        "quark": "🪐 夸克网盘",
+        "uc": "☁️ UC网盘",
+        "baidu": "💧 百度网盘"
+    }
+    
+    for pan_type, count in sorted(pan_stats.items(), key=lambda x: -x[1]):
+        icon_name = pan_icons.get(pan_type, f"📁 {pan_type}")
+        table_rows.append(f"| {icon_name} | {count} 条 | 资源分享 |")
+    
+    table_content = "\n".join(table_rows) if table_rows else "| 暂无数据 | - | - |"
     
     # 构建消息
     message = {
@@ -70,7 +97,7 @@ try:
                     "tag": "div",
                     "text": {
                         "tag": "lark_md",
-                        "content": "**📦 网盘统计详情：**\n| 网盘类型 | 结果数 | 示例内容 |\n| :--- | :--- | :--- |\n| 🧲 磁力链接 | 100+ | 动画、电影、游戏 |\n| 🕊️ 天翼云盘 | 50+ | 日剧分享系列 |\n| ⚡ 迅雷网盘 | 30+ | 有兽焉、你好1983 |\n| 🪐 夸克网盘 | 20+ | 为全人类第五季 |\n| ☁️ UC网盘 | 20+ | 我在大学修文物 |\n| 💧 百度网盘 | 12+ | 逐玉、保护者2025 |"
+                        "content": f"**📦 网盘统计详情：**\n| 网盘类型 | 结果数 | 备注 |\n| :--- | :--- | :--- |\n{table_content}"
                     }
                 },
                 {"tag": "hr"},
