@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pansou 搜索</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        input { padding: 10px; width: 300px; }
+        button { padding: 10px 20px; }
+        #results { margin-top: 20px; }
+        .result { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Pansou 网盘搜索</h1>
+    
+    <input type="text" id="keyword" placeholder="输入搜索关键词..." value="电影">
+    <button onclick="search()">搜索</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        async function search() {
+            const keyword = document.getElementById('keyword').value;
+            const resultsDiv = document.getElementById('results');
+            
+            if (!keyword) {
+                alert('请输入搜索关键词');
+                return;
+            }
+            
+            resultsDiv.innerHTML = '<p>搜索中...</p>';
+            
+            try {
+                // 尝试直接连接 Docker 容器
+                const response = await fetch(`http://172.17.0.2:8888/search?keyword=${encodeURIComponent(keyword)}`);
+                const data = await response.json();
+                
+                if (data.data && data.data.length > 0) {
+                    resultsDiv.innerHTML = data.data.map(item => `
+                        <div class="result">
+                            <strong>${item.name || '未知'}</strong><br>
+                            大小: ${item.size || '未知'}<br>
+                            来源: ${item.source || '未知'}
+                        </div>
+                    `).join('');
+                } else {
+                    resultsDiv.innerHTML = '<p>未找到结果</p>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<p style="color:red">错误: ${error.message}</p>
+                <p>提示: 如果看到 CORS 错误，说明容器正常运行，只是浏览器跨域限制。</p>`;
+            }
+        }
+        
+        // 页面加载时自动搜索
+        window.onload = () => search();
+    </script>
+</body>
+</html>
