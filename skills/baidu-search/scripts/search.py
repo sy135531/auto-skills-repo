@@ -59,7 +59,6 @@ if __name__ == "__main__":
             count = 50
     current_time = datetime.now()
     end_date = (current_time + timedelta(days=1)).strftime("%Y-%m-%d")
-    pattern = r'\d{4}-\d{2}-\d{2}to\d{4}-\d{2}-\d{2}'
     if "freshness" in parse_data:
         freshness = parse_data["freshness"]
         if freshness in ("pd", "pw", "pm", "py"):
